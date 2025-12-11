@@ -4,7 +4,7 @@ export const commonRoutes = new Hono();
 
 commonRoutes.get("/", (c) => {
   return c.json({
-    title: "PHONELAB API",
+    title: "PhoneLab API",
     phone: "/phones",
   });
 });

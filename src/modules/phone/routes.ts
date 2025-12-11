@@ -10,11 +10,11 @@ phoneRoutes.get("/", (c) => {
 phoneRoutes.get("/:slug", (c) => {
   const slug = c.req.param("slug");
 
-  const searchPhone = dataPhones.find((phone) => phone.slug === slug);
+  const phone = dataPhones.find((phone) => phone.slug === slug);
 
-  if (!searchPhone) {
+  if (!phone) {
     return c.notFound();
   }
 
-  return c.json(searchPhone);
+  return c.json(phone);
 });

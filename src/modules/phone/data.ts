@@ -3,15 +3,16 @@ type Phone = {
   brand: string;
   model: string;
   slug: string;
-  price: number;
+  price: number; // USD
   os: string;
+  releaseYear: number;
   createdAt: Date;
   updatedAt: Date;
 };
 
 type Phones = Phone[];
 
-export const dataPhones = [
+export const dataPhones: Phones = [
   {
     id: 1,
     brand: "Apple",
