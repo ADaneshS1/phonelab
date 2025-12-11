@@ -1,4 +1,4 @@
-# PHONELAB
+# PhoneLab
 
 To install dependencies:
 
