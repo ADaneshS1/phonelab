@@ -1,11 +1,20 @@
 import { Hono } from "hono";
+import { dataPhones } from "./data";
 
 export const phoneRoutes = new Hono();
 
 phoneRoutes.get("/", (c) => {
-  return c.json([
-    { id: 1, brand: "Apple", model: "iPhone 14", price: 999, os: "iOS" },
-    { id: 2, brand: "Samsung", model: "Galaxy S23", price: 899, os: "Android" },
-    { id: 3, brand: "Xiaomi", model: "Mi 13", price: 499, os: "Android" },
-  ]);
+  return c.json(dataPhones);
+});
+
+phoneRoutes.get("/:slug", (c) => {
+  const slug = c.req.param("slug");
+
+  const searchPhone = dataPhones.find((phone) => phone.slug === slug);
+
+  if (!searchPhone) {
+    return c.notFound();
+  }
+
+  return c.json(searchPhone);
 });
