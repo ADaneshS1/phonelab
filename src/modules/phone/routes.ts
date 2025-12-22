@@ -59,6 +59,15 @@ phoneRoutes.post("/", async (c) => {
 
   const data = parsed.data;
 
+  const slugExists = dataPhones.find((phone) => phone.slug.toLowerCase( ) === parsed.data.slug.toLowerCase());
+
+  if (slugExists) {
+    return c.json (
+      {message: "Slug telah digunakan"},
+      409
+    );
+  }
+
   const newPhone = {
     id: dataPhones.length + 1,
     ...data,
