@@ -18,3 +18,24 @@ phoneRoutes.get("/:slug", (c) => {
 
   return c.json(phone);
 });
+
+
+phoneRoutes.delete("/:slug", (c) => {
+
+  const slug = c.req.param("slug");
+
+  const index = dataPhones.findIndex((phone) => phone.slug === slug);
+
+
+  if (index === -1) {
+
+    return c.notFound();
+
+  }
+
+
+  dataPhones.splice(index, 1);
+
+  return c.json({ message: "Phone deleted successfully" });
+
+}); 
