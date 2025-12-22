@@ -1,4 +1,4 @@
-type Phone = {
+export type Phone = {
   id: number;
   brand: string;
   model: string;
@@ -10,7 +10,7 @@ type Phone = {
   updatedAt: Date;
 };
 
-type Phones = Phone[];
+export type Phones = Phone[];
 
 export const dataPhones: Phones = [
   {
