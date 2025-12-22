@@ -1,18 +1,20 @@
 import { Hono } from "hono";
-import { dataPhones } from "./data";
+import { dataPhones, Phones } from "./data";
 import { phoneCreateSchema } from "../type/schema";
 import { phoneUpdateSchema } from "../type/schema";
+
+let phones: Phones = dataPhones;
 
 export const phoneRoutes = new Hono();
 
 phoneRoutes.get("/", (c) => {
-  return c.json(dataPhones);
+  return c.json(phones);
 });
 
 phoneRoutes.get("/:slug", (c) => {
   const slug = c.req.param("slug");
 
-  const phone = dataPhones.find((phone) => phone.slug === slug);
+  const phone = phones.find((phone) => phone.slug === slug);
 
   if (!phone) {
     return c.notFound();
@@ -21,26 +23,19 @@ phoneRoutes.get("/:slug", (c) => {
   return c.json(phone);
 });
 
-
 phoneRoutes.delete("/:slug", (c) => {
-
   const slug = c.req.param("slug");
 
-  const index = dataPhones.findIndex((phone) => phone.slug === slug);
-
+  const index = phones.findIndex((phone) => phone.slug === slug);
 
   if (index === -1) {
-
     return c.notFound();
-
   }
 
-
-  dataPhones.splice(index, 1);
+  phones.splice(index, 1);
 
   return c.json({ message: "Phone deleted successfully" });
-
-}); 
+});
 
 phoneRoutes.post("/", async (c) => {
   const body = await c.req.json();
@@ -50,7 +45,7 @@ phoneRoutes.post("/", async (c) => {
   if (!parsed.success) {
     return c.json(
       {
-        message: "Validasi gagal",
+        message: "Failed to validate phone data",
         errors: parsed.error.flatten(),
       },
       400
@@ -59,13 +54,12 @@ phoneRoutes.post("/", async (c) => {
 
   const data = parsed.data;
 
-  const slugExists = dataPhones.find((phone) => phone.slug.toLowerCase( ) === parsed.data.slug.toLowerCase());
+  const slugExists = phones.find(
+    (phone) => phone.slug.toLowerCase() === parsed.data.slug.toLowerCase()
+  );
 
   if (slugExists) {
-    return c.json (
-      {message: "Slug telah digunakan"},
-      409
-    );
+    return c.json({ message: "Slug has been used" }, 409);
   }
 
   const newPhone = {
@@ -75,17 +69,10 @@ phoneRoutes.post("/", async (c) => {
     updatedAt: new Date(),
   };
 
-  dataPhones.push(newPhone);
+  phones.push(newPhone);
 
-  return c.json(
-    {
-      message: "Phone berhasil ditambahkan",
-      data: newPhone,
-    },
-    201
-  );
+  return c.json(newPhone, 201);
 });
-
 
 phoneRoutes.put("/:slug", async (c) => {
   const slug = c.req.param("slug");
@@ -96,24 +83,28 @@ phoneRoutes.put("/:slug", async (c) => {
   if (!parsed.success) {
     return c.json(
       {
-        message: "Validasi gagal",
+        message: "Failed to validate phone data",
         errors: parsed.error.flatten(),
       },
       400
     );
   }
 
-  const phone = dataPhones.find((p) => p.slug === slug);
+  const phone = dataPhones.find((phone) => phone.slug === slug);
   if (!phone) {
     return c.notFound();
   }
 
-  Object.assign(phone, parsed.data, {
+  const newPhone = {
+    ...phone,
+    ...parsed.data,
     updatedAt: new Date(),
+  };
+
+  phones = phones.map((phone) => {
+    if (phone.slug === slug) return newPhone;
+    return phone;
   });
 
-  return c.json({
-    message: "Phone berhasil diperbarui",
-    data: phone,
-  });
+  return c.json(newPhone);
 });
