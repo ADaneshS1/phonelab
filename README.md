@@ -22,8 +22,8 @@ open http://localhost:3000
 | ---------------- | -------- | ----------------- | --------- |
 | `/phones`        | `GET`    | Get all phones    | ✅        |
 | `/phones/{slug}` | `GET`    | Get item by id    | ✅        |
-| `/phones`        | `POST`   | Add new item      |           |
+| `/phones`        | `POST`   | Add new item      | ✅        |
 | `/phones`        | `DELETE` | Delete all phones |           |
-| `/phones/{id}`   | `DELETE` | Delete item by id |           |
+| `/phones/{id}`   | `DELETE` | Delete item by id | ✅        |
 | `/phones/{id}`   | `PATCH`  | Patch item by id  |           |
-| `/phones/{id}`   | `PUT`    | Update item by id |           |
+| `/phones/{id}`   | `PUT`    | Update item by id | ✅        |
