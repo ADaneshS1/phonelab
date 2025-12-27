@@ -37,6 +37,22 @@ phoneRoutes.delete("/:slug", (c) => {
   return c.json({ message: "Phone deleted successfully" });
 });
 
+phoneRoutes.delete("/", (c) => {
+  if (phones.length === 0) {
+    return c.json(
+      { message: "No phones to delete" },
+      404
+    );
+  }
+
+  phones.length = 0; // mengosongkan array
+
+  return c.json({
+    message: "All phones deleted successfully",
+  });
+});
+
+
 phoneRoutes.post("/", async (c) => {
   const body = await c.req.json();
 
