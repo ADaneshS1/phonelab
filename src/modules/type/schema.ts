@@ -6,6 +6,7 @@ export const phoneCreateSchema = z.object({
   slug: z.string().min(1),
   price: z.number().positive(),
   os: z.string().min(1),
+  chipset: z.string().min(1),
   releaseYear: z.number().int().min(2000),
 });
 
