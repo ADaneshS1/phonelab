@@ -124,3 +124,38 @@ phoneRoutes.put("/:slug", async (c) => {
 
   return c.json(newPhone);
 });
+
+phoneRoutes.patch("/:slug", async (c) => {
+  const slug = c.req.param("slug");
+  const body = await c.req.json();
+
+  const parsed = phoneUpdateSchema.safeParse(body);
+
+  if (!parsed.success) {
+    return c.json(
+      {
+        message: "Failed to validate phone data",
+        errors: parsed.error.flatten(),
+      },
+      400
+    );
+  }
+
+  const phone = dataPhones.find((phone) => phone.slug === slug);
+  if (!phone) {
+    return c.notFound();
+  }
+
+  const newPhone = {
+    ...phone,
+    ...parsed.data,
+    updatedAt: new Date(),
+  };
+
+  phones = phones.map((phone) => {
+    if (phone.slug === slug) return newPhone;
+    return phone;
+  });
+
+  return c.json(newPhone);
+});
