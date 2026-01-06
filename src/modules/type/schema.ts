@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const phoneCreateSchema = z.object({
+export const PhoneSchema = z.object({
   brand: z.string().min(1),
   model: z.string().min(1),
   slug: z.string().min(1),
@@ -8,9 +8,18 @@ export const phoneCreateSchema = z.object({
   os: z.string().min(1),
   chipset: z.string().min(1),
   releaseYear: z.number().int().min(2000),
+  createdAt: z.date(),
+  updatedAt: z.date(),
 });
 
-export const phoneUpdateSchema = phoneCreateSchema.partial();
+export const PhoneCreateSchema = PhoneSchema.omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
 
-export type PhoneCreateInput = z.infer<typeof phoneCreateSchema>;
-export type PhoneUpdateInput = z.infer<typeof phoneUpdateSchema>;
+export const PhoneUpdateSchema = PhoneCreateSchema;
+
+export type Phone = z.infer<typeof PhoneSchema>;
+export type PhoneCreateInput = z.infer<typeof PhoneSchema>;
+export type PhoneUpdateInput = z.infer<typeof PhoneUpdateSchema>;
