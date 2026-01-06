@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { dataPhones, Phones } from "./data";
-import { phoneCreateSchema } from "../type/schema";
-import { phoneUpdateSchema } from "../type/schema";
+import { PhoneCreateSchema } from "../type/schema";
+import { PhoneUpdateSchema } from "../type/schema";
 
 let phones: Phones = dataPhones;
 
@@ -39,10 +39,7 @@ phoneRoutes.delete("/:slug", (c) => {
 
 phoneRoutes.delete("/", (c) => {
   if (phones.length === 0) {
-    return c.json(
-      { message: "No phones to delete" },
-      404
-    );
+    return c.json({ message: "No phones to delete" }, 404);
   }
 
   phones.length = 0; // mengosongkan array
@@ -52,11 +49,10 @@ phoneRoutes.delete("/", (c) => {
   });
 });
 
-
 phoneRoutes.post("/", async (c) => {
   const body = await c.req.json();
 
-  const parsed = phoneCreateSchema.safeParse(body);
+  const parsed = PhoneCreateSchema.safeParse(body);
 
   if (!parsed.success) {
     return c.json(
@@ -90,11 +86,11 @@ phoneRoutes.post("/", async (c) => {
   return c.json(newPhone, 201);
 });
 
-phoneRoutes.put("/:slug", async (c) => {
-  const slug = c.req.param("slug");
+phoneRoutes.put("/:id", async (c) => {
+  const id = Number(c.req.param("id"));
   const body = await c.req.json();
 
-  const parsed = phoneUpdateSchema.safeParse(body);
+  const parsed = PhoneUpdateSchema.safeParse(body);
 
   if (!parsed.success) {
     return c.json(
@@ -106,7 +102,7 @@ phoneRoutes.put("/:slug", async (c) => {
     );
   }
 
-  const phone = dataPhones.find((phone) => phone.slug === slug);
+  const phone = dataPhones.find((phone) => phone.id === id);
   if (!phone) {
     return c.notFound();
   }
@@ -118,18 +114,18 @@ phoneRoutes.put("/:slug", async (c) => {
   };
 
   phones = phones.map((phone) => {
-    if (phone.slug === slug) return newPhone;
+    if (phone.id === id) return newPhone;
     return phone;
   });
 
   return c.json(newPhone);
 });
 
-phoneRoutes.patch("/:slug", async (c) => {
-  const slug = c.req.param("slug");
+phoneRoutes.patch("/:id", async (c) => {
+  const id = Number(c.req.param("id"));
   const body = await c.req.json();
 
-  const parsed = phoneUpdateSchema.safeParse(body);
+  const parsed = PhoneUpdateSchema.safeParse(body);
 
   if (!parsed.success) {
     return c.json(
@@ -141,7 +137,7 @@ phoneRoutes.patch("/:slug", async (c) => {
     );
   }
 
-  const phone = dataPhones.find((phone) => phone.slug === slug);
+  const phone = dataPhones.find((phone) => phone.id === id);
   if (!phone) {
     return c.notFound();
   }
@@ -153,7 +149,7 @@ phoneRoutes.patch("/:slug", async (c) => {
   };
 
   phones = phones.map((phone) => {
-    if (phone.slug === slug) return newPhone;
+    if (phone.id === id) return newPhone;
     return phone;
   });
 
