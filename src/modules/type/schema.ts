@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 export const PhoneSchema = z.object({
+  id: z.number().positive(),
   brand: z.string().min(1),
   model: z.string().min(1),
   slug: z.string().min(1),
