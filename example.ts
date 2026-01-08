@@ -3,13 +3,27 @@ import * as pg from "pg";
 const client = new pg.Client({
   connectionString: process.env.DATABASE_URL,
 });
-
 await client.connect();
 
-const result = await client.query("SELECT * FROM phones");
+type Phone = {
+  id: number;
+  brand: string;
+  model: string;
+  slug: string;
+  price: number;
+  os: string;
+  chipset: string;
+  releaseYear: number;
+  createdAt: Date;
+  updatedAt: Date;
+};
 
-const phones = result.rows;
-
-console.log({ phones });
-
-await client.end();
+try {
+  const result = await client.query("SELECT * FROM phones");
+  const phones: Phone[] = result.rows;
+  console.log({ phones });
+} catch (error) {
+  console.error("Failed to connect to the database", error);
+} finally {
+  await client.end();
+}
