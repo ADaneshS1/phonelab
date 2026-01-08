@@ -54,7 +54,7 @@ export const dataPhones: Phones = [
     id: 4,
     brand: "Samsung",
     model: "Galaxy S25 Ultra",
-    slug: "galaxy-s35-ultra", // Note: slug typo dari data awal tetap saya pertahankan agar konsisten dengan ID kamu
+    slug: "galaxy-s35-ultra",
     price: 1499,
     os: "Android 15",
     chipset: "Snapdragon 8 Gen 4",

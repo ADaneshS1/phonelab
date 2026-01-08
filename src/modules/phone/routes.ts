@@ -1,73 +1,121 @@
-import { Hono } from "hono";
+import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { dataPhones, Phones } from "./data";
-import { PhoneCreateSchema } from "../type/schema";
-import { PhoneUpdateSchema } from "../type/schema";
+import {
+  PhoneSchema,
+  PhoneCreateSchema,
+  PhoneUpdateSchema,
+} from "../type/schema";
 
 let phones: Phones = dataPhones;
+export const phoneRoutes = new OpenAPIHono();
 
-export const phoneRoutes = new Hono();
-
-phoneRoutes.get("/", (c) => {
-  return c.json(phones);
+const getPhonesRoute = createRoute({
+  method: "get",
+  path: "/",
+  summary: "Get all phones",
+  responses: {
+    200: {
+      content: { "application/json": { schema: z.array(PhoneSchema) } },
+      description: "List of phones",
+    },
+  },
 });
 
-phoneRoutes.get("/:slug", (c) => {
-  const slug = c.req.param("slug");
-
-  const phone = phones.find((phone) => phone.slug === slug);
-
-  if (!phone) {
-    return c.notFound();
-  }
-
-  return c.json(phone);
+const postPhoneRoute = createRoute({
+  method: "post",
+  path: "/",
+  summary: "Create a new phone",
+  request: {
+    body: {
+      content: { "application/json": { schema: PhoneCreateSchema } },
+    },
+  },
+  responses: {
+    201: {
+      content: { "application/json": { schema: PhoneSchema } },
+      description: "Phone created",
+    },
+    400: { description: "Validation Error" },
+    409: { description: "Slug already exists" },
+  },
 });
 
-phoneRoutes.delete("/:slug", (c) => {
-  const slug = c.req.param("slug");
-
-  const index = phones.findIndex((phone) => phone.slug === slug);
-
-  if (index === -1) {
-    return c.notFound();
-  }
-
-  phones.splice(index, 1);
-
-  return c.json({ message: "Phone deleted successfully" });
+const getPhoneBySlugRoute = createRoute({
+  method: "get",
+  path: "/{slug}",
+  summary: "Get phone by slug",
+  request: {
+    params: z.object({
+      slug: z.string().openapi({ example: "iphone-15" }),
+    }),
+  },
+  responses: {
+    200: {
+      content: { "application/json": { schema: PhoneSchema } },
+      description: "Phone detail",
+    },
+    404: { description: "Phone not found" },
+  },
 });
 
-phoneRoutes.delete("/", (c) => {
-  if (phones.length === 0) {
-    return c.json({ message: "No phones to delete" }, 404);
-  }
-
-  phones.length = 0; // mengosongkan array
-
-  return c.json({
-    message: "All phones deleted successfully",
-  });
-});
-
-phoneRoutes.post("/", async (c) => {
-  const body = await c.req.json();
-
-  const parsed = PhoneCreateSchema.safeParse(body);
-
-  if (!parsed.success) {
-    return c.json(
-      {
-        message: "Failed to validate phone data",
-        errors: parsed.error.flatten(),
+const deletePhoneBySlugRoute = createRoute({
+  method: "delete",
+  path: "/{slug}",
+  summary: "Delete a phone",
+  request: {
+    params: z.object({
+      slug: z.string().openapi({ example: "iphone-17" }),
+    }),
+  },
+  responses: {
+    200: {
+      description: "Success message",
+      content: {
+        "application/json": { schema: z.object({ message: z.string() }) },
       },
-      400
-    );
-  }
+    },
+    404: { description: "Phone not found" },
+  },
+});
 
-  const data = parsed.data;
+const patchPhoneRoute = createRoute({
+  method: "patch",
+  path: "/{id}",
+  summary: "Update phone data",
+  request: {
+    params: z.object({
+      id: z.string().openapi({ example: "1" }),
+    }),
+    body: {
+      content: { "application/json": { schema: PhoneUpdateSchema } },
+    },
+  },
+  responses: {
+    200: {
+      description: "Updated phone object",
+      content: { "application/json": { schema: PhoneSchema } },
+    },
+    404: { description: "Phone not found" },
+  },
+});
+
+phoneRoutes.openapi(getPhonesRoute, (c) => {
+  return c.json(phones, 200);
+});
+
+phoneRoutes.openapi(getPhoneBySlugRoute, (c) => {
+  const { slug } = c.req.valid("param");
+  const phone = phones.find((p) => p.slug === slug);
+
+  if (!phone) return c.json({ message: "Not Found" }, 404);
+  return c.json(phone, 200);
+});
+
+phoneRoutes.openapi(postPhoneRoute, async (c) => {
+  const data = c.req.valid("json");
 
   const slugExists = phones.find(
-    (phone) => phone.slug.toLowerCase() === parsed.data.slug.toLowerCase()
+    (p) => p.slug.toLowerCase() === data.slug.toLowerCase()
   );
 
   if (slugExists) {
@@ -75,83 +123,39 @@ phoneRoutes.post("/", async (c) => {
   }
 
   const newPhone = {
-    id: dataPhones.length + 1,
+    id: phones.length + 1,
     ...data,
     createdAt: new Date(),
     updatedAt: new Date(),
   };
 
   phones.push(newPhone);
-
   return c.json(newPhone, 201);
 });
 
-phoneRoutes.put("/:id", async (c) => {
-  const id = Number(c.req.param("id"));
-  const body = await c.req.json();
+phoneRoutes.openapi(deletePhoneBySlugRoute, (c) => {
+  const { slug } = c.req.valid("param");
+  const index = phones.findIndex((p) => p.slug === slug);
 
-  const parsed = PhoneUpdateSchema.safeParse(body);
+  if (index === -1) return c.json({ message: "Phone not found" }, 404);
 
-  if (!parsed.success) {
-    return c.json(
-      {
-        message: "Failed to validate phone data",
-        errors: parsed.error.flatten(),
-      },
-      400
-    );
-  }
-
-  const phone = dataPhones.find((phone) => phone.id === id);
-  if (!phone) {
-    return c.notFound();
-  }
-
-  const newPhone = {
-    ...phone,
-    ...parsed.data,
-    updatedAt: new Date(),
-  };
-
-  phones = phones.map((phone) => {
-    if (phone.id === id) return newPhone;
-    return phone;
-  });
-
-  return c.json(newPhone);
+  phones.splice(index, 1);
+  return c.json({ message: "Phone deleted successfully" }, 200);
 });
 
-phoneRoutes.patch("/:id", async (c) => {
-  const id = Number(c.req.param("id"));
-  const body = await c.req.json();
+phoneRoutes.openapi(patchPhoneRoute, (c) => {
+  const id = Number(c.req.valid("param").id);
+  const body = c.req.valid("json");
 
-  const parsed = PhoneUpdateSchema.safeParse(body);
+  const phone = phones.find((p) => p.id === id);
+  if (!phone) return c.json({ message: "Phone not found" }, 404);
 
-  if (!parsed.success) {
-    return c.json(
-      {
-        message: "Failed to validate phone data",
-        errors: parsed.error.flatten(),
-      },
-      400
-    );
-  }
-
-  const phone = dataPhones.find((phone) => phone.id === id);
-  if (!phone) {
-    return c.notFound();
-  }
-
-  const newPhone = {
+  const updatedPhone = {
     ...phone,
-    ...parsed.data,
+    ...body,
     updatedAt: new Date(),
   };
 
-  phones = phones.map((phone) => {
-    if (phone.id === id) return newPhone;
-    return phone;
-  });
-
-  return c.json(newPhone);
+  phones = phones.map((p) => (p.id === id ? updatedPhone : p));
+  return c.json(updatedPhone, 200);
 });
