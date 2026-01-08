@@ -10,12 +10,6 @@ type Phone = {
   brand: string;
   model: string;
   slug: string;
-  price: number;
-  os: string;
-  chipset: string;
-  releaseYear: number;
-  createdAt: Date;
-  updatedAt: Date;
 };
 
 try {
