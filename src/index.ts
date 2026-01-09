@@ -17,7 +17,7 @@ app.doc("/openapi.json", {
   info: {
     title: "PHONELAB API",
     version: "1.0.0",
-    description: "Dokumentasi API untuk manajemen data handphone",
+    description: "API documentation for mobile device data management",
   },
   servers: [{ url: "http://localhost:3000" }],
 });
