@@ -25,10 +25,9 @@ open http://localhost:3000
 | `/phones`        | `POST`   | Add new item      | ✅        |
 | `/phones`        | `DELETE` | Delete all phones | ✅        |
 | `/phones/{id}`   | `DELETE` | Delete item by id | ✅        |
-| `/pdhones/{id}`   | `PATCH` | Patch item by id  |           |
+| `/pdhones/{id}`  | `PATCH`  | Patch item by id  |           |
 | `/phones/{id}`   | `PUT`    | Update item by id | ✅        |
-
 
 ## Entity Relationship Diagram (ERD)
 
-![Phone db-diagram](img/phone-erd.png)
+![Phone db-diagram](images/phone-erd.png)
