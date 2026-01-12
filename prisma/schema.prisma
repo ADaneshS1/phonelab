@@ -1,4 +1,4 @@
-  // This is your Prisma schema file,
+// This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 // Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
@@ -6,7 +6,7 @@
 
 generator client {
   provider = "prisma-client"
-  output   = "../generated/prisma"
+  output   = "../src/generated/prisma"
 }
 
 datasource db {
@@ -18,11 +18,12 @@ model Phone {
 
   brand String
   model String
-  slug String @db.VarChar(100)
+  slug  String @db.VarChar(100)
 
   price Float
 
-  os String
+  os          String
+  chipset     String
   releaseYear Int
 
   createdAt DateTime @default(now())
