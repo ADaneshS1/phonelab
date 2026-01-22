@@ -1,10 +1,5 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { dataPhones, Phones } from "./data";
-import {
-  PhoneSchema,
-  PhoneCreateSchema,
-  PhoneUpdateSchema,
-} from "../type/schema";
+import { PhoneSchema, PhoneCreateSchema, PhoneUpdateSchema } from "./schema";
 import { prisma } from "@/lib/prisma";
 
 export const phoneRoutes = new OpenAPIHono();
@@ -78,59 +73,13 @@ const deletePhoneBySlugRoute = createRoute({
   },
 });
 
-const putPhoneByIdRoute = createRoute({
-  method: "put",
-  path: "/{id}",
-  summary: "Update a phone by id",
-  request: {
-    params: z.object({
-      id: z.coerce.number().openapi({ example: 1 }),
-    }),
-    body: {
-      content: {
-        "application/json": {
-          schema: PhoneUpdateSchema,
-        },
-      },
-    },
-  },
-  responses: {
-    200: {
-      description: "Phone updated successfully",
-      content: {
-        "application/json": {
-          schema: PhoneSchema,
-        },
-      },
-    },
-    404: { description: "Phone not found" },
-  },
-});
-
-const patchPhoneRoute = createRoute({
-  method: "patch",
-  path: "/{id}",
-  summary: "Update phone data",
-  request: {
-    params: z.object({
-      id: z.coerce.number().openapi({ example: 1 }),
-    }),
-    body: {
-      content: { "application/json": { schema: PhoneUpdateSchema } },
-    },
-  },
-  responses: {
-    200: {
-      description: "Updated phone object",
-      content: { "application/json": { schema: PhoneSchema } },
-    },
-    404: { description: "Phone not found" },
-  },
-});
-
 //------------OPENAPI--------------
 phoneRoutes.openapi(getPhonesRoute, async (c) => {
-  const phones = await prisma.phone.findMany();
+  const phones = await prisma.phone.findMany({
+    include: {
+      brand: true,
+    },
+  });
   return c.json(phones);
 });
 
@@ -149,13 +98,13 @@ phoneRoutes.openapi(postPhoneRoute, async (c) => {
   const data = c.req.valid("json");
   const newPhone = await prisma.phone.create({
     data: {
-      brand: data.brand,
       model: data.model,
       slug: data.slug,
       price: data.price,
       os: data.os,
       chipset: data.chipset,
       releaseYear: data.releaseYear,
+      brand: data.brandSlug ? { connect: { slug: data.brandSlug } } : undefined,
     },
   });
   return c.json(newPhone, 201);
@@ -169,41 +118,40 @@ phoneRoutes.openapi(deletePhoneBySlugRoute, async (c) => {
   return c.json({ message: "Phone deleted successfully" }, 200);
 });
 
-// phoneRoutes.openapi(patchPhoneRoute, (c) => {
-//   const { id } = c.req.valid("param");
-//   const body = c.req.valid("json");
-//   return c.json({}, 200);
-// });
+phoneRoutes.openapi(
+  createRoute({
+    method: "patch",
+    path: "/{id}",
+    summary: "Update a phone by id",
+    request: {
+      params: z.object({ id: z.coerce.number().openapi({ example: 1 }) }),
+      body: { content: { "application/json": { schema: PhoneUpdateSchema } } },
+    },
+    responses: {
+      200: {
+        description: "Phone updated successfully",
+        content: { "application/json": { schema: PhoneSchema } },
+      },
+      404: { description: "Phone update failed, not found" },
+      500: { description: "Phone update failed" },
+    },
+  }),
+  async (c) => {
+    const { id } = c.req.valid("param");
+    const body = c.req.valid("json");
 
-phoneRoutes.openapi(putPhoneByIdRoute, async (c) => {
-  const { id } = c.req.valid("param");
-  const body = c.req.valid("json");
+    try {
+      const updatedPhone = await prisma.phone.update({
+        where: { id },
+        data: body,
+      });
+      return c.json(updatedPhone, 200);
+    } catch (error: any) {
+      if (error.code === "P2025") {
+        return c.json({ message: "Phone update failed, not found" }, 404);
+      }
 
-  try {
-    const updated = await prisma.phone.update({
-      where: { id: id },
-      data: body,
-    });
-    return c.json(updated, 200);
-  } catch (error: any) {
-    if (error.code === "P2025") return c.json({ message: "Not Found" }, 404);
-    return c.json({ message: "Error", error: error.message }, 500);
+      return c.json({ message: "Phone update failed", error }, 500);
+    }
   }
-});
-
-phoneRoutes.openapi(patchPhoneRoute, async (c) => {
-  const { id } = c.req.valid("param");
-  const body = c.req.valid("json");
-
-  try {
-    const updated = await prisma.phone.update({
-      where: { id: id },
-      data: body,
-    });
-    return c.json(updated, 200);
-  } catch (error: any) {
-    if (error.code === "P2025")
-      return c.json({ message: "Phone ID not found" }, 404);
-    return c.json({ message: "Error", error: error.message }, 500);
-  }
-});
+);
