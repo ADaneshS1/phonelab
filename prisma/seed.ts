@@ -2,16 +2,30 @@ import { prisma } from "../src/lib/prisma";
 import { dataPhones } from "../src/modules/phone/data";
 
 async function main() {
-  await prisma.phone.deleteMany();
+  // for (const brand of dataBrands) {
+  //   // TODO
+  // }
 
   for (const phone of dataPhones) {
-    await prisma.phone.create({
-      data: phone,
-    });
-  }
+    const { brandSlug, ...phoneBody } = phone;
 
-  const allPhones = await prisma.phone.findMany();
-  console.log(allPhones);
+    const upsertedPhone = await prisma.phone.upsert({
+      where: { slug: phone.slug },
+      update: {
+        ...phoneBody,
+        brand: { connect: { slug: brandSlug } },
+      },
+      create: {
+        ...phoneBody,
+        brand: { connect: { slug: brandSlug } },
+      },
+      include: {
+        brand: true,
+      },
+    });
+
+    console.log(`📱 ${upsertedPhone.brand?.name} ${upsertedPhone.model}`);
+  }
 }
 
 main()
