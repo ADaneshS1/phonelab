@@ -1,5 +1,4 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { dataPhones, Phones } from "./data";
 import {
   PhoneSchema,
   PhoneCreateSchema,
@@ -40,13 +39,13 @@ const postPhoneRoute = createRoute({
   },
 });
 
-const getPhoneBySlugRoute = createRoute({
+const getPhoneByIdRoute = createRoute({
   method: "get",
   path: "/{slug}",
   summary: "Get phone by slug",
   request: {
     params: z.object({
-      slug: z.string().openapi({ example: "iphone-15" }),
+      id: z.coerce.number().openapi({ example: 1 }),
     }),
   },
   responses: {
@@ -58,13 +57,13 @@ const getPhoneBySlugRoute = createRoute({
   },
 });
 
-const deletePhoneBySlugRoute = createRoute({
+const deletePhoneByIdRoute = createRoute({
   method: "delete",
-  path: "/{slug}",
+  path: "/{id}",
   summary: "Delete a phone",
   request: {
     params: z.object({
-      slug: z.string().openapi({ example: "iphone-17" }),
+      id: z.coerce.number().openapi({ example: 1 }),
     }),
   },
   responses: {
@@ -134,10 +133,10 @@ phoneRoutes.openapi(getPhonesRoute, async (c) => {
   return c.json(phones);
 });
 
-phoneRoutes.openapi(getPhoneBySlugRoute, async (c) => {
-  const { slug } = c.req.valid("param");
+phoneRoutes.openapi(getPhoneByIdRoute, async (c) => {
+  const { id } = c.req.valid("param");
   const phone = await prisma.phone.findUnique({
-    where: { slug: slug },
+    where: { id: id },
   });
   if (!phone) {
     return c.json({ message: "Phone not found" }, 404);
@@ -149,31 +148,25 @@ phoneRoutes.openapi(postPhoneRoute, async (c) => {
   const data = c.req.valid("json");
   const newPhone = await prisma.phone.create({
     data: {
-      brand: data.brand,
       model: data.model,
       slug: data.slug,
       price: data.price,
       os: data.os,
       chipset: data.chipset,
       releaseYear: data.releaseYear,
+      brand: data.brandSlug ? { connect: { slug: data.brandSlug } } : undefined,
     },
   });
   return c.json(newPhone, 201);
 });
 
-phoneRoutes.openapi(deletePhoneBySlugRoute, async (c) => {
-  const { slug } = c.req.valid("param");
+phoneRoutes.openapi(deletePhoneByIdRoute, async (c) => {
+  const { id } = c.req.valid("param");
   const phone = await prisma.phone.delete({
-    where: { slug: slug },
+    where: { id: id },
   });
   return c.json({ message: "Phone deleted successfully" }, 200);
 });
-
-// phoneRoutes.openapi(patchPhoneRoute, (c) => {
-//   const { id } = c.req.valid("param");
-//   const body = c.req.valid("json");
-//   return c.json({}, 200);
-// });
 
 phoneRoutes.openapi(putPhoneByIdRoute, async (c) => {
   const { id } = c.req.valid("param");
@@ -196,14 +189,18 @@ phoneRoutes.openapi(patchPhoneRoute, async (c) => {
   const body = c.req.valid("json");
 
   try {
-    const updated = await prisma.phone.update({
-      where: { id: id },
+    const updatedPhone = await prisma.phone.update({
+      where: { id },
       data: body,
     });
-    return c.json(updated, 200);
+    return c.json(updatedPhone, 200);
   } catch (error: any) {
-    if (error.code === "P2025")
-      return c.json({ message: "Phone ID not found" }, 404);
-    return c.json({ message: "Error", error: error.message }, 500);
+    if (error.code === "P2025") {
+      return c.json({ message: "Phone update failed, not found" }, 404);
+    }
+    return c.json(
+      { message: "Phone update failed", error: error.message },
+      500,
+    );
   }
 });
