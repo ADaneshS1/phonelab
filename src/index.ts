@@ -1,6 +1,6 @@
 import { OpenAPIHono } from "@hono/zod-openapi";
 import { logger } from "hono/logger";
-import { apiReference } from "@scalar/hono-api-reference";
+import { Scalar } from "@scalar/hono-api-reference";
 
 import { phoneRoutes } from "./modules/phone/routes";
 import { commonRoutes } from "./modules/common/routes";
@@ -23,13 +23,13 @@ app.doc("/openapi.json", {
 });
 
 app.get(
-  "/docs",
-  apiReference({
+  "/",
+  Scalar({
     spec: {
       url: "/openapi.json",
     },
     theme: "deepSpace",
-  } as any)
+  } as any),
 );
 
 export default app;
