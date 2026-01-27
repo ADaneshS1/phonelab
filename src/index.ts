@@ -19,7 +19,6 @@ app.doc("/openapi.json", {
     version: "1.0.0",
     description: "API documentation for mobile device data management",
   },
-  servers: [{ url: "http://localhost:3000" }],
 });
 
 app.get(
