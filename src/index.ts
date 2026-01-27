@@ -9,7 +9,7 @@ const app = new OpenAPIHono();
 
 app.use(logger());
 
-app.route("/", commonRoutes);
+// app.route("/", commonRoutes);
 app.route("/phones", phoneRoutes);
 
 app.doc("/openapi.json", {
