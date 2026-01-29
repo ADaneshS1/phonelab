@@ -30,4 +30,4 @@ open http://localhost:3000
 
 ## Entity Relationship Diagram (ERD)
 
-![Phone db-diagram](images/phone-erd.png)
+<!-- ![Phone db-diagram](images/phone-erd.png) -->
