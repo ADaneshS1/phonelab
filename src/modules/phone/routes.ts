@@ -1,9 +1,5 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import {
-  PhoneSchema,
-  PhoneCreateSchema,
-  PhoneUpdateSchema,
-} from "../type/schema";
+import { PhoneSchema, PhoneCreateSchema, PhoneUpdateSchema } from "./schema";
 import { prisma } from "@/lib/prisma";
 
 export const phoneRoutes = new OpenAPIHono();

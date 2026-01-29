@@ -1,4 +1,4 @@
-import { SeedPhone } from "../type/schema";
+import { SeedPhone } from "./schema";
 
 export const dataPhones: SeedPhone[] = [
   {
