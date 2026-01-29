@@ -37,8 +37,8 @@ const postPhoneRoute = createRoute({
 
 const getPhoneByIdRoute = createRoute({
   method: "get",
-  path: "/{slug}",
-  summary: "Get phone by slug",
+  path: "/{id}",
+  summary: "Get phone by id",
   request: {
     params: z.object({
       id: z.coerce.number().openapi({ example: 1 }),
