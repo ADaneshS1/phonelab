@@ -1,23 +1,35 @@
 import { prisma } from "../src/lib/prisma";
 import { dataPhones } from "../src/modules/phone/data";
+import { dataBrands } from "../src/modules/brand/data";
 
 async function main() {
-  // for (const brand of dataBrands) {
-  //   // TODO
-  // }
+  for (const brand of dataBrands) {
+    const upsertedBrand = await prisma.brand.upsert({
+      where: { slug: brand.slug.toLowerCase() },
+      update: { name: brand.name },
+      create: {
+        name: brand.name,
+        slug: brand.slug.toLowerCase(),
+      },
+    });
+
+    console.log(`🏢 ${upsertedBrand.name}`);
+  }
 
   for (const phone of dataPhones) {
     const { brandSlug, ...phoneBody } = phone;
+
+    const targetSlug = brandSlug.toLowerCase();
 
     const upsertedPhone = await prisma.phone.upsert({
       where: { slug: phone.slug },
       update: {
         ...phoneBody,
-        brand: { connect: { slug: brandSlug } },
+        brand: { connect: { slug: targetSlug } }, // Pakai targetSlug
       },
       create: {
         ...phoneBody,
-        brand: { connect: { slug: brandSlug } },
+        brand: { connect: { slug: targetSlug } }, // Pakai targetSlug
       },
       include: {
         brand: true,
