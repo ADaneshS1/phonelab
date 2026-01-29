@@ -24,8 +24,11 @@ export const PhoneCreateSchema = PhoneSchema.omit({
   })
   .openapi("PhoneCreate");
 
-export const PhoneUpdateSchema =
-  PhoneCreateSchema.partial().openapi("PhoneUpdate");
+export const PhoneUpdateSchema = PhoneCreateSchema.partial()
+  .extend({
+    brandSlug: z.string().optional(),
+  })
+  .openapi("PhoneUpdate");
 
 export const SeedPhoneSchema = PhoneCreateSchema.extend({
   brandSlug: z.string(),

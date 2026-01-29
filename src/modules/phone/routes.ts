@@ -102,30 +102,13 @@ const putPhoneByIdRoute = createRoute({
   },
 });
 
-const patchPhoneRoute = createRoute({
-  method: "patch",
-  path: "/{id}",
-  summary: "Update phone data",
-  request: {
-    params: z.object({
-      id: z.coerce.number().openapi({ example: 1 }),
-    }),
-    body: {
-      content: { "application/json": { schema: PhoneUpdateSchema } },
-    },
-  },
-  responses: {
-    200: {
-      description: "Updated phone object",
-      content: { "application/json": { schema: PhoneSchema } },
-    },
-    404: { description: "Phone not found" },
-  },
-});
-
 //------------OPENAPI--------------
 phoneRoutes.openapi(getPhonesRoute, async (c) => {
-  const phones = await prisma.phone.findMany();
+  const phones = await prisma.phone.findMany({
+    include: {
+      brand: true,
+    },
+  });
   return c.json(phones);
 });
 
@@ -152,6 +135,9 @@ phoneRoutes.openapi(postPhoneRoute, async (c) => {
       releaseYear: data.releaseYear,
       brand: data.brandSlug ? { connect: { slug: data.brandSlug } } : undefined,
     },
+    include: {
+      brand: true,
+    },
   });
   return c.json(newPhone, 201);
 });
@@ -166,37 +152,24 @@ phoneRoutes.openapi(deletePhoneByIdRoute, async (c) => {
 
 phoneRoutes.openapi(putPhoneByIdRoute, async (c) => {
   const { id } = c.req.valid("param");
-  const body = c.req.valid("json");
-
-  try {
-    const updated = await prisma.phone.update({
-      where: { id: id },
-      data: body,
-    });
-    return c.json(updated, 200);
-  } catch (error: any) {
-    if (error.code === "P2025") return c.json({ message: "Not Found" }, 404);
-    return c.json({ message: "Error", error: error.message }, 500);
-  }
-});
-
-phoneRoutes.openapi(patchPhoneRoute, async (c) => {
-  const { id } = c.req.valid("param");
-  const body = c.req.valid("json");
+  const { brandSlug, ...body } = c.req.valid("json");
 
   try {
     const updatedPhone = await prisma.phone.update({
-      where: { id },
-      data: body,
+      where: { id: id },
+      data: {
+        ...body,
+        brand: { connect: { slug: brandSlug } },
+      },
+      include: {
+        brand: true,
+      },
     });
     return c.json(updatedPhone, 200);
   } catch (error: any) {
     if (error.code === "P2025") {
-      return c.json({ message: "Phone update failed, not found" }, 404);
+      return c.json({ message: "Not Found" }, 404);
     }
-    return c.json(
-      { message: "Phone update failed", error: error.message },
-      500,
-    );
+    return c.json({ message: "Error", error: error.message }, 500);
   }
 });
